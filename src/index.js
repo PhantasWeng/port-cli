@@ -73,3 +73,32 @@ async function listAllMode() {
     }
   }
 }
+
+async function singlePortMode(port) {
+  const entries = getLsofEntries(port);
+
+  if (entries.length === 0) {
+    console.log(`No process listening on port ${port}.`);
+    return;
+  }
+
+  console.log(`Process${entries.length > 1 ? 'es' : ''} listening on port ${port}:`);
+  for (const e of entries) {
+    console.log(`  [PID ${e.pid}] ${e.name} (${e.user})`);
+  }
+
+  const yes = await confirm({
+    message: `Kill ${entries.length > 1 ? 'these processes' : 'this process'}?`,
+  });
+
+  if (!yes) return;
+
+  for (const entry of entries) {
+    const result = killProcess(entry.pid);
+    if (result.success) {
+      console.log(`Killed PID ${entry.pid} (${entry.name})`);
+    } else {
+      console.error(result.error);
+    }
+  }
+}
