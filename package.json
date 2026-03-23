@@ -1,0 +1,22 @@
+{
+  "name": "port-cli",
+  "version": "0.1.0",
+  "description": "Interactive CLI to list listening ports and kill processes",
+  "type": "module",
+  "bin": {
+    "port": "./bin/port.js"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "port",
+    "kill",
+    "process",
+    "cli"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@inquirer/prompts": "^8.3.2"
+  }
+}
