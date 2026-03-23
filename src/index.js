@@ -23,5 +23,53 @@ export async function main(args) {
     process.exit(1);
   }
 
-  // TODO: implement interactive flow in next tasks
+  try {
+    if (parsed.port === null) {
+      await listAllMode();
+    } else {
+      await singlePortMode(parsed.port);
+    }
+  } catch (err) {
+    if (err.name === 'ExitPromptError') {
+      // User pressed Ctrl+C — exit cleanly
+      process.exit(0);
+    }
+    throw err;
+  }
+}
+
+async function listAllMode() {
+  const entries = getLsofEntries();
+
+  if (entries.length === 0) {
+    console.log('No listening ports found.');
+    return;
+  }
+
+  const choices = entries.map((e) => ({
+    name: `[PID ${e.pid}] ${e.name} :${e.port} (${e.user})`,
+    value: e,
+  }));
+
+  const selected = await checkbox({
+    message: 'Select processes to kill:',
+    choices,
+  });
+
+  if (selected.length === 0) return;
+
+  const yes = await confirm({
+    message: `Kill ${selected.length} selected process${selected.length > 1 ? 'es' : ''}?`,
+  });
+
+  if (!yes) return;
+
+  for (const entry of selected) {
+    const result = killProcess(entry.pid);
+    if (result.success) {
+      console.log(`Killed PID ${entry.pid} (${entry.name} :${entry.port})`);
+    } else {
+      console.error(result.error);
+    }
+  }
 }
