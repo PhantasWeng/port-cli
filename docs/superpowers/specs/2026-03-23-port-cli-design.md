@@ -9,6 +9,10 @@
 - npm 套件名稱：`port-cli`
 - CLI 指令名稱：`port`
 
+## 支援平台
+
+macOS 和有安裝 `lsof` 的 Linux。如果 `lsof` 不存在，顯示明確錯誤訊息並退出。
+
 ## 使用方式
 
 ```bash
@@ -20,17 +24,19 @@ port 3000         # 查看佔用 port 3000 的程序，互動確認後 kill
 
 ### 不帶參數（`port`）
 
-1. 執行 `lsof -i -P -n -sTCP:LISTEN` 取得所有 listening port
-2. 以 checkbox 列出程序資訊（PID、程序名、port、使用者）
-3. 使用者用方向鍵 + 空白鍵多選要殺掉的程序
-4. 顯示確認提示，確認後 kill 選中的程序
+1. 執行 `lsof` 取得所有 listening port
+2. 如果沒有任何 listening port，顯示 "No listening ports found" 後結束
+3. 以 checkbox 列出程序資訊，格式：`[PID 1234] node :3000 (ubuntu)`
+4. 使用者用方向鍵 + 空白鍵多選要殺掉的程序
+5. 顯示確認提示：「Kill N selected processes?」，確認後 kill
 
 ### 帶參數（`port 3000`）
 
-1. 執行 `lsof -i :{port} -P -n -sTCP:LISTEN` 查特定 port
-2. 如果沒有程序佔用，顯示提示後結束
-3. 如果有，列出程序資訊，用 confirm 問要不要 kill
-4. 確認後 kill
+1. 驗證參數為合法 port 號碼（1-65535 的整數），不合法則顯示錯誤後結束
+2. 執行 `lsof` 查特定 port
+3. 如果沒有程序佔用，顯示提示後結束
+4. 如果有，列出程序資訊，用 confirm 問要不要 kill
+5. 確認後 kill
 
 ## 專案結構
 
@@ -49,9 +55,16 @@ port-cli/
 
 - **ESM** — `"type": "module"` in package.json
 - **互動套件** — `@inquirer/prompts`（checkbox, confirm）
-- **取得 port 資訊** — `child_process.execSync` 執行 `lsof`，解析輸出為 `{ pid, name, user, port }` 陣列
-- **kill 程序** — `process.kill(pid, 'SIGKILL')`，不需呼叫外部指令
-- **不自動加 sudo** — 使用者自行決定是否用 `sudo port` 執行；權限不足時顯示錯誤訊息提示用 sudo
+- **取得 port 資訊** — `child_process.execFileSync('lsof', [...args])` 執行 lsof（用 `execFileSync` 而非 `execSync`，避免 shell injection）。使用 `lsof -F pcnPi` 取得 machine-readable 輸出，解析為 `{ pid, name, user, port }` 陣列
+- **kill 程序** — `process.kill(pid, 'SIGTERM')`，預設用 SIGTERM 讓程序有機會清理資源
+- **不自動加 sudo** — 使用者自行決定是否用 `sudo port` 執行
+- **錯誤處理** — kill 時若遇到 `EPERM`，顯示該程序的錯誤訊息（提示用 sudo），但繼續處理剩餘程序
+- **Ctrl+C 處理** — 攔截 `@inquirer/prompts` 的 `ExitPromptError`，乾淨地退出（exit code 0）
+
+## Exit Codes
+
+- `0` — 成功或使用者取消
+- `1` — 錯誤（參數不合法、lsof 不存在等）
 
 ## package.json 重點
 
@@ -63,7 +76,7 @@ port-cli/
     "port": "./bin/port.js"
   },
   "dependencies": {
-    "@inquirer/prompts": "latest"
+    "@inquirer/prompts": "^7.0.0"
   }
 }
 ```
