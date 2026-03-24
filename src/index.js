@@ -2,6 +2,14 @@
 import { checkbox, confirm } from '@inquirer/prompts';
 import { getLsofEntries } from './lsof.js';
 import { killProcess } from './kill.js';
+import {
+  formatHeader,
+  formatTable,
+  formatSummary,
+  formatKillResult,
+  formatEmpty,
+  formatError,
+} from './format.js';
 
 export function parseArgs(args) {
   if (args.length === 0) return { port: null };
@@ -19,7 +27,7 @@ export async function main(args) {
   try {
     parsed = parseArgs(args);
   } catch (err) {
-    console.error(err.message);
+    console.error(formatError(err.message));
     process.exit(1);
   }
 
@@ -31,7 +39,6 @@ export async function main(args) {
     }
   } catch (err) {
     if (err.name === 'ExitPromptError') {
-      // User pressed Ctrl+C — exit cleanly
       process.exit(0);
     }
     throw err;
@@ -41,10 +48,18 @@ export async function main(args) {
 async function listAllMode() {
   const entries = getLsofEntries();
 
+  console.log(formatHeader());
+  console.log();
+
   if (entries.length === 0) {
-    console.log('No listening ports found.');
+    console.log(formatEmpty());
     return;
   }
+
+  console.log(formatTable(entries));
+  console.log();
+  console.log(formatSummary(entries.length));
+  console.log();
 
   const choices = entries.map((e) => ({
     name: `[PID ${e.pid}] ${e.name} :${e.port} (${e.user})`,
@@ -67,26 +82,25 @@ async function listAllMode() {
 
   for (const entry of selected) {
     const result = killProcess(entry.pid);
-    if (result.success) {
-      console.log(`Killed PID ${entry.pid} (${entry.name} :${entry.port})`);
-    } else {
-      console.error(result.error);
-    }
+    console.log(formatKillResult(result, entry));
   }
 }
 
 async function singlePortMode(port) {
   const entries = getLsofEntries(port);
 
+  console.log(formatHeader(port));
+  console.log();
+
   if (entries.length === 0) {
-    console.log(`No process listening on port ${port}.`);
+    console.log(formatEmpty(port));
     return;
   }
 
-  console.log(`Process${entries.length > 1 ? 'es' : ''} listening on port ${port}:`);
-  for (const e of entries) {
-    console.log(`  [PID ${e.pid}] ${e.name} :${e.port} (${e.user})`);
-  }
+  console.log(formatTable(entries));
+  console.log();
+  console.log(formatSummary(entries.length));
+  console.log();
 
   const yes = await confirm({
     message: `Kill ${entries.length > 1 ? 'these processes' : 'this process'}?`,
@@ -97,10 +111,6 @@ async function singlePortMode(port) {
 
   for (const entry of entries) {
     const result = killProcess(entry.pid);
-    if (result.success) {
-      console.log(`Killed PID ${entry.pid} (${entry.name} :${entry.port})`);
-    } else {
-      console.error(result.error);
-    }
+    console.log(formatKillResult(result, entry));
   }
 }
