@@ -42,3 +42,17 @@ export function formatTable(entries) {
 export function formatSummary(count) {
   return chalk.dim(`  ${count} process${count === 1 ? '' : 'es'} listening`);
 }
+
+export function formatKillResult(result, entry) {
+  if (result.success) {
+    return `  ${chalk.green('✔')} Killed PID ${entry.pid} (${entry.name} :${entry.port})`;
+  }
+  return `  ${chalk.red('✖')} ${result.error}`;
+}
+
+export function formatEmpty(port) {
+  if (port !== undefined) {
+    return chalk.yellow(`  No process listening on port ${port}.`);
+  }
+  return chalk.yellow('  No listening ports found.');
+}

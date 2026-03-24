@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatHeader, formatError, formatTable, formatSummary } from '../src/format.js';
+import { formatHeader, formatError, formatTable, formatSummary, formatKillResult, formatEmpty } from '../src/format.js';
 
 // Strip ANSI escape codes for test assertions
 function strip(str) {
@@ -75,5 +75,35 @@ describe('formatSummary', () => {
   it('uses plural for multiple processes', () => {
     const result = strip(formatSummary(3));
     assert.equal(result, '  3 processes listening');
+  });
+});
+
+describe('formatKillResult', () => {
+  it('shows green checkmark on success', () => {
+    const result = strip(formatKillResult(
+      { success: true, error: null },
+      { pid: 1234, name: 'node', port: 3000 },
+    ));
+    assert.equal(result, '  ✔ Killed PID 1234 (node :3000)');
+  });
+
+  it('shows red cross on failure', () => {
+    const result = strip(formatKillResult(
+      { success: false, error: 'PID 1234: Permission denied. Try running with sudo.' },
+      { pid: 1234, name: 'node', port: 3000 },
+    ));
+    assert.equal(result, '  ✖ PID 1234: Permission denied. Try running with sudo.');
+  });
+});
+
+describe('formatEmpty', () => {
+  it('shows no listening ports message without port', () => {
+    const result = strip(formatEmpty());
+    assert.equal(result, '  No listening ports found.');
+  });
+
+  it('shows port-specific empty message', () => {
+    const result = strip(formatEmpty(3000));
+    assert.equal(result, '  No process listening on port 3000.');
   });
 });
