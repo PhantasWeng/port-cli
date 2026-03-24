@@ -60,6 +60,7 @@ async function listAllMode() {
 
   const yes = await confirm({
     message: `Kill ${selected.length} selected process${selected.length > 1 ? 'es' : ''}?`,
+    default: false,
   });
 
   if (!yes) return;
@@ -84,11 +85,12 @@ async function singlePortMode(port) {
 
   console.log(`Process${entries.length > 1 ? 'es' : ''} listening on port ${port}:`);
   for (const e of entries) {
-    console.log(`  [PID ${e.pid}] ${e.name} (${e.user})`);
+    console.log(`  [PID ${e.pid}] ${e.name} :${e.port} (${e.user})`);
   }
 
   const yes = await confirm({
     message: `Kill ${entries.length > 1 ? 'these processes' : 'this process'}?`,
+    default: false,
   });
 
   if (!yes) return;
@@ -96,7 +98,7 @@ async function singlePortMode(port) {
   for (const entry of entries) {
     const result = killProcess(entry.pid);
     if (result.success) {
-      console.log(`Killed PID ${entry.pid} (${entry.name})`);
+      console.log(`Killed PID ${entry.pid} (${entry.name} :${entry.port})`);
     } else {
       console.error(result.error);
     }

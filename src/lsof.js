@@ -45,10 +45,8 @@ export function parseLsofOutput(raw) {
 }
 
 export function getLsofEntries(port) {
-  const args = ['-iTCP', '-sTCP:LISTEN', '-F', 'pcnPLi'];
-  if (port !== undefined) {
-    args.splice(1, 0, `-i:${port}`);
-  }
+  const tcpFilter = port !== undefined ? `-iTCP:${port}` : '-iTCP';
+  const args = [tcpFilter, '-sTCP:LISTEN', '-F', 'pcnPLi'];
 
   try {
     const output = execFileSync('lsof', args, { encoding: 'utf-8' });

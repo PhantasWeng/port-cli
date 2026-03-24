@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(chmod:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(node bin/port.js)",
+      "Bash(npm test:*)",
+      "Bash(node bin/port.js abc)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(timeout 3 node bin/port.js 22)"
+    ]
+  }
+}
