@@ -42,7 +42,7 @@
 
 Header 後空一行，表格前有兩格縮排。欄位用固定寬度對齊：
 - PID: 8 字元
-- PROCESS: 10 字元
+- PROCESS: 10 字元（超長名稱截斷加 `…`，如 `chromium-b…`）
 - PORT: 8 字元
 - USER: 剩餘
 
@@ -85,10 +85,10 @@ Header 變成 `⚡ port :PORT`，port 號用 cyan。其餘格式同 list-all。
 ### 錯誤
 
 ```
-Error: Invalid port "abc". Must be an integer between 1 and 65535.
+Invalid port: "abc". Must be an integer between 1 and 65535.
 ```
 
-錯誤訊息用 `chalk.red`。
+錯誤訊息用 `chalk.red`。格式與現有 `parseArgs` 的 throw message 一致（不加 `Error:` 前綴）。
 
 ## Checkbox 選項格式
 
@@ -102,14 +102,15 @@ inquirer checkbox 的 `name` 欄位也要用同樣的表格對齊格式（但不
 
 ## 實作範圍
 
-- 新增 `src/format.js` — 所有格式化函式集中管理
-  - `formatHeader(port?)` — 產生 header 行
-  - `formatTable(entries)` — 產生對齊表格字串
-  - `formatSummary(count)` — 產生摘要行
-  - `formatKillResult(result, entry)` — 產生 kill 結果行
+- 新增 `src/format.js` — 所有格式化函式集中管理，所有函式皆為 named export，回傳字串（由呼叫端傳給 `console.log`/`console.error`）
+  - `formatHeader(port?)` — 產生 header 行（`port` 為 number 或 undefined）
+  - `formatTable(entries)` — 產生對齊表格字串。`entries` 為 `{ pid: number, name: string, port: number, user: string }[]`
+  - `formatSummary(count)` — 產生摘要行（自動處理單複數：`1 process` / `N processes`）
+  - `formatKillResult({ success, error }, entry)` — 產生 kill 結果行。第一個參數為 `killProcess()` 的回傳值，`entry` 為 `{ pid, name, port }` 用於顯示
   - `formatEmpty(port?)` — 產生空結果提示
   - `formatError(message)` — 產生錯誤訊息
 - 修改 `src/index.js` — 將 console.log 替換為 format 函式
+- confirm/checkbox prompt 訊息維持現狀，不加色彩（inquirer 自行管理互動式 highlight）
 
 ## 色彩 Fallback
 
