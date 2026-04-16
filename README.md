@@ -1,4 +1,4 @@
-# port-cli
+# @phantas/port-cli
 
 Interactive CLI to list listening ports and kill processes.
 
@@ -18,7 +18,7 @@ Process listening on port 3000:
 ## Install
 
 ```bash
-npm install -g port-cli
+npm install -g @phantas/port-cli
 ```
 
 Requires Node.js >= 18 and `lsof` (pre-installed on macOS and most Linux distributions).

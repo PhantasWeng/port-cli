@@ -1,5 +1,5 @@
 {
-  "name": "port-cli",
+  "name": "@phantas/port-cli",
   "version": "0.1.0",
   "description": "Interactive CLI to list listening ports and kill processes",
   "type": "module",
@@ -15,9 +15,17 @@
     "process",
     "cli"
   ],
+  "author": "Phantas Weng <bensonuong@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PhantasWeng/port-cli.git"
+  },
   "dependencies": {
     "@inquirer/prompts": "^8.3.2"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=18"
