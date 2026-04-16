@@ -16,7 +16,7 @@ export function parseLsofOutput(raw) {
         current = { pid: Number(value) };
         break;
       case 'c':
-        current.name = value;
+        current.name = value.replace(/[\x00-\x1f\x7f-\x9f]/g, '');
         break;
       case 'L':
         current.user = value;
