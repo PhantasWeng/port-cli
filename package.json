@@ -1,6 +1,6 @@
 {
   "name": "@phantas/port-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Interactive CLI to list listening ports and kill processes",
   "type": "module",
   "bin": {
