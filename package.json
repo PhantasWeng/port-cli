@@ -22,7 +22,8 @@
     "url": "https://github.com/PhantasWeng/port-cli.git"
   },
   "dependencies": {
-    "@inquirer/prompts": "^8.3.2"
+    "@inquirer/prompts": "^8.3.2",
+    "fzy.js": "^0.4.1"
   },
   "publishConfig": {
     "access": "public"
