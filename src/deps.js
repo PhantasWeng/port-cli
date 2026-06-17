@@ -5,14 +5,14 @@ export const DEPENDENCIES = [
   {
     cmd: 'lsof',
     required: true,
-    purpose: '列出 listening ports',
-    hints: { linux: 'apt install lsof（或你的發行版套件）', darwin: 'brew install lsof' },
+    purpose: 'list listening ports',
+    hints: { linux: 'apt install lsof (or your distro equivalent)', darwin: 'brew install lsof' },
   },
   {
     cmd: 'ps',
     required: false,
-    purpose: '顯示 process 啟動指令',
-    hints: { linux: 'apt install procps', darwin: 'macOS 內建' },
+    purpose: 'show process launch command',
+    hints: { linux: 'apt install procps', darwin: 'preinstalled on macOS' },
   },
 ];
 
@@ -34,7 +34,7 @@ export function commandExists(cmd, pathEnv = process.env.PATH) {
 export function installHint(dep, platform = process.platform) {
   if (platform === 'darwin') return dep.hints.darwin;
   if (platform === 'linux') return dep.hints.linux;
-  return `請用你的套件管理員安裝 ${dep.cmd}`;
+  return `install ${dep.cmd} via your package manager`;
 }
 
 export function checkDependencies(deps = DEPENDENCIES, existsFn = commandExists) {
@@ -48,12 +48,12 @@ export function checkDependencies(deps = DEPENDENCIES, existsFn = commandExists)
 }
 
 export function formatDoctorReport(results) {
-  const lines = ['依賴檢查：'];
+  const lines = ['Dependency check:'];
   for (const r of results) {
     const mark = r.found ? '✓' : '✗';
-    const status = r.found ? '已安裝' : '未安裝';
+    const status = r.found ? 'installed' : 'not found';
     lines.push(`  ${mark} ${r.cmd} ${status}  — ${r.purpose}`);
-    if (!r.found) lines.push(`      安裝：${r.hint}`);
+    if (!r.found) lines.push(`      Install: ${r.hint}`);
   }
   return lines.join('\n');
 }
@@ -64,9 +64,9 @@ export function formatPreflightProblems(results) {
   for (const r of results) {
     if (r.found) continue;
     if (r.required) {
-      errors.push(`❌ 缺少必要命令 ${r.cmd}：無法${r.purpose}\n   安裝：${r.hint}`);
+      errors.push(`❌ Missing required command ${r.cmd}: cannot ${r.purpose}\n   Install: ${r.hint}`);
     } else {
-      warnings.push(`⚠  ${r.cmd} 未安裝：將無法${r.purpose}（安裝：${r.hint}）`);
+      warnings.push(`⚠  ${r.cmd} not found: cannot ${r.purpose} (install: ${r.hint})`);
     }
   }
   return { errors, warnings };

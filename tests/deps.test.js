@@ -33,16 +33,16 @@ describe('commandExists', () => {
 });
 
 describe('installHint', () => {
-  const dep = { cmd: 'ps', hints: { linux: 'apt install procps', darwin: 'macOS 內建' } };
+  const dep = { cmd: 'ps', hints: { linux: 'apt install procps', darwin: 'preinstalled on macOS' } };
 
   it('returns the darwin hint on macOS', () => {
-    assert.strictEqual(installHint(dep, 'darwin'), 'macOS 內建');
+    assert.strictEqual(installHint(dep, 'darwin'), 'preinstalled on macOS');
   });
   it('returns the linux hint on Linux', () => {
     assert.strictEqual(installHint(dep, 'linux'), 'apt install procps');
   });
   it('falls back for unknown platforms', () => {
-    assert.strictEqual(installHint(dep, 'sunos'), '請用你的套件管理員安裝 ps');
+    assert.strictEqual(installHint(dep, 'sunos'), 'install ps via your package manager');
   });
 });
 
@@ -70,7 +70,7 @@ describe('checkDependencies', () => {
     assert.strictEqual(ps.found, false);
     assert.strictEqual(ps.required, false);
     assert.ok(typeof ps.hint === 'string' && ps.hint.length > 0);
-    assert.strictEqual(ps.purpose, '顯示 process 啟動指令');
+    assert.strictEqual(ps.purpose, 'show process launch command');
   });
 });
 
@@ -80,7 +80,7 @@ describe('formatDoctorReport', () => {
     const out = formatDoctorReport(results);
     assert.match(out, /✓ lsof/);
     assert.match(out, /✗ ps/);
-    assert.match(out, /安裝：apt install procps/);
+    assert.match(out, /Install: apt install procps/);
   });
 });
 
@@ -90,8 +90,8 @@ describe('formatPreflightProblems', () => {
     const { errors, warnings } = formatPreflightProblems(results);
     assert.strictEqual(errors.length, 1);
     assert.strictEqual(warnings.length, 0);
-    assert.match(errors[0], /缺少必要命令 lsof/);
-    assert.match(errors[0], /安裝：/);
+    assert.match(errors[0], /Missing required command lsof/);
+    assert.match(errors[0], /Install:/);
   });
 
   it('warns (not errors) when only an optional dep is missing', () => {
@@ -99,7 +99,7 @@ describe('formatPreflightProblems', () => {
     const { errors, warnings } = formatPreflightProblems(results);
     assert.strictEqual(errors.length, 0);
     assert.strictEqual(warnings.length, 1);
-    assert.match(warnings[0], /ps 未安裝/);
+    assert.match(warnings[0], /ps not found/);
   });
 
   it('returns empty arrays when everything is present', () => {
