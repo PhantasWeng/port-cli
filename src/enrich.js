@@ -1,5 +1,6 @@
 import { basename } from 'node:path';
 import { homedir } from 'node:os';
+import { execFileSync } from 'node:child_process';
 
 export function parsePsOutput(raw) {
   const map = new Map();
@@ -52,4 +53,30 @@ export function detailLine(entry, home = homedir()) {
 export function inlineLabel(entry) {
   const base = `[PID ${entry.pid}] ${entry.name} :${entry.port} (${entry.user})`;
   return entry.project ? `${base} — ${entry.project}` : base;
+}
+
+export function getCommands(pids) {
+  if (pids.length === 0) return new Map();
+  try {
+    const out = execFileSync('ps', ['-p', pids.join(','), '-o', 'pid=,command='], { encoding: 'utf-8' });
+    return parsePsOutput(out);
+  } catch {
+    return new Map();
+  }
+}
+
+export function getCwds(pids) {
+  if (pids.length === 0) return new Map();
+  try {
+    const out = execFileSync('lsof', ['-a', '-p', pids.join(','), '-d', 'cwd', '-F', 'pn'], { encoding: 'utf-8' });
+    return parseCwdOutput(out);
+  } catch {
+    return new Map();
+  }
+}
+
+export function enrichEntries(entries) {
+  if (entries.length === 0) return entries;
+  const pids = [...new Set(entries.map((e) => e.pid))];
+  return mergeEnrichment(entries, getCommands(pids), getCwds(pids));
 }
