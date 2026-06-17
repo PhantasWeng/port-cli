@@ -5,11 +5,11 @@ import { parseArgs } from '../src/index.js';
 
 describe('parseArgs', () => {
   it('returns null port for no args', () => {
-    assert.deepStrictEqual(parseArgs([]), { port: null });
+    assert.deepStrictEqual(parseArgs([]), { port: null, filter: null });
   });
 
   it('parses valid port number', () => {
-    assert.deepStrictEqual(parseArgs(['3000']), { port: 3000 });
+    assert.deepStrictEqual(parseArgs(['3000']), { port: 3000, filter: null });
   });
 
   it('throws for non-numeric arg', () => {
