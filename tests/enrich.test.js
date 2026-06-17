@@ -50,3 +50,46 @@ describe('mergeEnrichment', () => {
     });
   });
 });
+
+import { shortenHome, detailLine, inlineLabel } from '../src/enrich.js';
+
+const HOME = '/Users/ben';
+
+describe('shortenHome', () => {
+  it('replaces home prefix with ~', () => {
+    assert.strictEqual(shortenHome('/Users/ben/code/my-app', HOME), '~/code/my-app');
+  });
+  it('returns ~ for exact home', () => {
+    assert.strictEqual(shortenHome('/Users/ben', HOME), '~');
+  });
+  it('leaves non-home paths unchanged', () => {
+    assert.strictEqual(shortenHome('/var/www', HOME), '/var/www');
+  });
+});
+
+describe('detailLine', () => {
+  it('joins cwd and command with a dot', () => {
+    const e = { cwd: '/Users/ben/code/my-app', command: 'next dev' };
+    assert.strictEqual(detailLine(e, HOME), '~/code/my-app · next dev');
+  });
+  it('shows only cwd when command missing', () => {
+    assert.strictEqual(detailLine({ cwd: '/Users/ben/x', command: null }, HOME), '~/x');
+  });
+  it('shows only command when cwd missing', () => {
+    assert.strictEqual(detailLine({ cwd: null, command: 'node a.js' }, HOME), 'node a.js');
+  });
+  it('returns null when both missing', () => {
+    assert.strictEqual(detailLine({ cwd: null, command: null }, HOME), null);
+  });
+});
+
+describe('inlineLabel', () => {
+  it('appends project when present', () => {
+    const e = { pid: 1234, name: 'node', port: 8000, user: 'ben', project: 'my-app' };
+    assert.strictEqual(inlineLabel(e), '[PID 1234] node :8000 (ben) — my-app');
+  });
+  it('omits project suffix when null', () => {
+    const e = { pid: 1234, name: 'node', port: 8000, user: 'ben', project: null };
+    assert.strictEqual(inlineLabel(e), '[PID 1234] node :8000 (ben)');
+  });
+});

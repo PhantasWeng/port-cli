@@ -1,4 +1,5 @@
 import { basename } from 'node:path';
+import { homedir } from 'node:os';
 
 export function parsePsOutput(raw) {
   const map = new Map();
@@ -32,4 +33,23 @@ export function mergeEnrichment(entries, commandMap, cwdMap) {
     const command = commandMap.get(e.pid) ?? null;
     return { ...e, cwd, command, project: cwd ? basename(cwd) : null };
   });
+}
+
+export function shortenHome(p, home = homedir()) {
+  if (!p) return p;
+  if (p === home) return '~';
+  if (home && p.startsWith(home + '/')) return '~' + p.slice(home.length);
+  return p;
+}
+
+export function detailLine(entry, home = homedir()) {
+  const parts = [];
+  if (entry.cwd) parts.push(shortenHome(entry.cwd, home));
+  if (entry.command) parts.push(entry.command);
+  return parts.length ? parts.join(' · ') : null;
+}
+
+export function inlineLabel(entry) {
+  const base = `[PID ${entry.pid}] ${entry.name} :${entry.port} (${entry.user})`;
+  return entry.project ? `${base} — ${entry.project}` : base;
 }
