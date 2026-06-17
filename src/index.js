@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { search, confirm } from '@inquirer/prompts';
 import { fuzzyFilter } from './fuzzy.js';
 import { getLsofEntries } from './lsof.js';
+import { enrichEntries, inlineLabel, detailLine } from './enrich.js';
 import { killProcess } from './kill.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -96,7 +97,7 @@ function onEscAbort(ac) {
 const CANCEL_HINT = '(Press Esc or Ctrl+C to cancel)';
 
 async function listAllMode(filter) {
-  let entries = getLsofEntries();
+  let entries = enrichEntries(getLsofEntries());
 
   if (entries.length === 0) {
     console.log('No listening ports found.');
@@ -120,8 +121,9 @@ async function listAllMode(filter) {
       source: (term) => {
         const filtered = fuzzyFilter(entries, term || '');
         return filtered.map((e) => ({
-          name: `[PID ${e.pid}] ${e.name} :${e.port} (${e.user})`,
+          name: inlineLabel(e),
           value: e,
+          description: detailLine(e) ?? undefined,
         }));
       },
     }, { signal: ac.signal });
@@ -152,7 +154,7 @@ async function listAllMode(filter) {
 }
 
 async function singlePortMode(port) {
-  const entries = getLsofEntries(port);
+  const entries = enrichEntries(getLsofEntries(port));
 
   if (entries.length === 0) {
     console.log(`No process listening on port ${port}.`);
@@ -161,7 +163,9 @@ async function singlePortMode(port) {
 
   console.log(`Process${entries.length > 1 ? 'es' : ''} listening on port ${port}:`);
   for (const e of entries) {
-    console.log(`  [PID ${e.pid}] ${e.name} :${e.port} (${e.user})`);
+    console.log(`  ${inlineLabel(e)}`);
+    const detail = detailLine(e);
+    if (detail) console.log(`    ↳ ${detail}`);
   }
 
   const ac = new AbortController();
