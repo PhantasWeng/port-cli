@@ -18,6 +18,7 @@ export const DEPENDENCIES = [
 
 export function commandExists(cmd, pathEnv = process.env.PATH) {
   if (!pathEnv) return false;
+  // POSIX PATH (':' separator); project targets macOS/Linux only.
   for (const dir of pathEnv.split(':')) {
     if (!dir) continue;
     try {

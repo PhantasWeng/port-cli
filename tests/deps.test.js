@@ -22,6 +22,14 @@ describe('commandExists', () => {
   it('returns false for empty PATH', () => {
     assert.strictEqual(commandExists('lsof', ''), false);
   });
+
+  it('returns false when a same-named file exists but is not executable', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'deps-'));
+    const bin = join(dir, 'notexec');
+    writeFileSync(bin, 'data\n');
+    chmodSync(bin, 0o644);
+    assert.strictEqual(commandExists('notexec', dir), false);
+  });
 });
 
 describe('installHint', () => {
