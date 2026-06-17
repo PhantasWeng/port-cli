@@ -6,6 +6,7 @@ import { search, confirm } from '@inquirer/prompts';
 import { fuzzyFilter } from './fuzzy.js';
 import { getLsofEntries } from './lsof.js';
 import { enrichEntries, inlineLabel, detailLine } from './enrich.js';
+import { checkDependencies, formatDoctorReport, formatPreflightProblems } from './deps.js';
 import { killProcess } from './kill.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -26,7 +27,8 @@ Options:
 Examples:
   port               List all listening ports interactively.
   port 3000          Show processes on port 3000 and offer to kill them.
-  port --filter node  Filter ports by process name.`;
+  port --filter node  Filter ports by process name.
+  port doctor        Check required external commands and report status.`;
 
 export function parseArgs(args) {
   let port = null;
@@ -64,6 +66,12 @@ export function parseArgs(args) {
 }
 
 export async function main(args) {
+  if (args[0] === 'doctor') {
+    const results = checkDependencies();
+    console.log(formatDoctorReport(results));
+    process.exit(results.some((r) => r.required && !r.found) ? 1 : 0);
+  }
+
   let parsed;
   try {
     parsed = parseArgs(args);
@@ -73,6 +81,13 @@ export async function main(args) {
   }
 
   try {
+    const { errors, warnings } = formatPreflightProblems(checkDependencies());
+    if (errors.length) {
+      for (const e of errors) console.error(e);
+      process.exit(1);
+    }
+    for (const w of warnings) console.error(w);
+
     if (parsed.port === null) {
       await listAllMode(parsed.filter);
     } else {
