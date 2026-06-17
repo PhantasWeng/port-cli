@@ -1,3 +1,5 @@
+import { basename } from 'node:path';
+
 export function parsePsOutput(raw) {
   const map = new Map();
   for (const line of raw.split('\n')) {
@@ -22,4 +24,12 @@ export function parseCwdOutput(raw) {
     else if (tag === 'n' && pid !== null) map.set(pid, value);
   }
   return map;
+}
+
+export function mergeEnrichment(entries, commandMap, cwdMap) {
+  return entries.map((e) => {
+    const cwd = cwdMap.get(e.pid) ?? null;
+    const command = commandMap.get(e.pid) ?? null;
+    return { ...e, cwd, command, project: cwd ? basename(cwd) : null };
+  });
 }

@@ -27,3 +27,26 @@ describe('parseCwdOutput', () => {
     assert.strictEqual(parseCwdOutput('').size, 0);
   });
 });
+
+import { mergeEnrichment } from '../src/enrich.js';
+
+describe('mergeEnrichment', () => {
+  const entries = [
+    { pid: 1234, name: 'node', user: 'ben', port: 8000 },
+    { pid: 5678, name: 'node', user: 'ben', port: 3000 },
+  ];
+
+  it('fills cwd, command, and project (basename of cwd)', () => {
+    const cmd = new Map([[1234, 'next dev']]);
+    const cwd = new Map([[1234, '/Users/ben/code/my-app']]);
+    const [a, b] = mergeEnrichment(entries, cmd, cwd);
+    assert.deepStrictEqual(a, {
+      pid: 1234, name: 'node', user: 'ben', port: 8000,
+      cwd: '/Users/ben/code/my-app', command: 'next dev', project: 'my-app',
+    });
+    assert.deepStrictEqual(b, {
+      pid: 5678, name: 'node', user: 'ben', port: 3000,
+      cwd: null, command: null, project: null,
+    });
+  });
+});
