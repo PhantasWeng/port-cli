@@ -68,7 +68,7 @@ export function getCommands(pids) {
 export function getCwds(pids) {
   if (pids.length === 0) return new Map();
   try {
-    const out = execFileSync('lsof', ['-a', '-p', pids.join(','), '-d', 'cwd', '-F', 'pn'], { encoding: 'utf-8' });
+    const out = execFileSync('lsof', ['-w', '-a', '-p', pids.join(','), '-d', 'cwd', '-F', 'pn'], { encoding: 'utf-8' });
     return parseCwdOutput(out);
   } catch {
     return new Map();
