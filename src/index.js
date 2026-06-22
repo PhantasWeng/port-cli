@@ -111,6 +111,27 @@ function onEscAbort(ac) {
 
 const CANCEL_HINT = '(Press Esc or Ctrl+C to cancel)';
 
+export function searchSource(entries, term) {
+  const t = term || '';
+  // Tab autocompletes the input to the selected item's full label (inlineLabel),
+  // whose punctuation ([, ], :, parens, em dash) never appears in the searchable
+  // fields — so fuzzy-matching it yields nothing. Detect that case and keep the entry.
+  const exact = entries.find((e) => inlineLabel(e) === t);
+  const filtered = exact ? [exact] : fuzzyFilter(entries, t);
+  return filtered.map((e) => ({
+    name: inlineLabel(e),
+    value: e,
+    description: detailLine(e) ?? undefined,
+  }));
+}
+
+// Size the search list to the terminal height instead of the default 7 rows.
+// Reserve a few lines for the message, input, description, and help text.
+function searchPageSize() {
+  const rows = process.stdout.rows || 0;
+  return Math.max(10, rows - 5);
+}
+
 async function listAllMode(filter) {
   let entries = enrichEntries(getLsofEntries());
 
@@ -133,14 +154,8 @@ async function listAllMode(filter) {
   try {
     selected = await search({
       message: `Search and select a process to kill: ${CANCEL_HINT}`,
-      source: (term) => {
-        const filtered = fuzzyFilter(entries, term || '');
-        return filtered.map((e) => ({
-          name: inlineLabel(e),
-          value: e,
-          description: detailLine(e) ?? undefined,
-        }));
-      },
+      pageSize: searchPageSize(),
+      source: (term) => searchSource(entries, term),
     }, { signal: ac.signal });
   } finally {
     cleanup();
